@@ -3,7 +3,7 @@ require("dotenv").config();
 // Express
 const express = require("express");
 const app = express();
-const port = "3000";
+const port = "4005";
 
 // Initialising Express
 app.listen(port);
@@ -73,7 +73,7 @@ function plagarismCheck(article_url) {
     } else {
         const scanID = "123";
         axios
-            .post(
+            .put(
                 "https://api.copyleaks.com/v3/businesses/submit/url/" + scanID,
                 {
                     url: "https://github.com/section-engineering-education/engineering-education/raw/64c8d371e74285fe52bf783d69f20cee15ad803d/content/articles/complete-guide-on-using-sequelize-basic-and-advanced-features/index.md",
@@ -83,7 +83,7 @@ function plagarismCheck(article_url) {
                         sandbox: true,
                         webhooks: {
                             status:
-                                "http://localhost:3000/webhook/{STATUS}/" +
+                                "http://enged-plagiarism-checker.louisefindlay.com/webhook/{STATUS}/" +
                                 scanID,
                         },
                     },
