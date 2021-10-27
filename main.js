@@ -4,6 +4,7 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const port = "4005";
+const bodyParser = require('body-parser');
 app.use(bodyParser.json());
 
 // Initialising Express
@@ -11,16 +12,6 @@ app.listen(port);
 
 app.get("/", (req, res) => {
     res.send("Welcome");
-});
-
-app.post("/webhook", function (req, res) {
-    console.log(req.body);
-    res.status(200).end();
-});
-
-app.post("/webhook/completed", function (req, res) {
-    console.log(req.body);
-    res.status(200).end();
 });
 
 app.post("/webhook/completed/:scanID", function (req, res) {
@@ -50,7 +41,7 @@ octokit.rest.pulls
     .listFiles({
         owner: "section-engineering-education",
         repo: "engineering-education",
-        pull_number: 4594,
+        pull_number: 4593,
     })
     .then((result) => {
         result.data.forEach((file) => {
@@ -90,12 +81,11 @@ function plagarismCheck(article_url) {
         // Scan URL
     } else {
         console.info("Have access token");
-        const scanID = "4595";
+        const scanID = "4598";
         axios
             .put(
                 "https://api.copyleaks.com/v3/businesses/submit/url/" + scanID,
                 {
-<<<<<<< HEAD
                     url: "https://github.com/section-engineering-education/engineering-education/raw/64c8d371e74285fe52bf783d69f20cee15ad803d/content/articles/complete-guide-on-using-sequelize-basic-and-advanced-features/index.md",
                     properties: {
                         sandbox: true,
@@ -104,25 +94,17 @@ function plagarismCheck(article_url) {
                                 "http://enged-plagiarism-checker.louisefindlay.com/webhook/{STATUS}/" +
                                 scanID,
                         },
+			pdf: {
+                            create: true,
+                        },
                     },
-=======
-                url: "https://github.com/section-engineering-education/engineering-education/raw/64c8d371e74285fe52bf783d69f20cee15ad803d/content/articles/complete-guide-on-using-sequelize-basic-and-advanced-features/index.md",
-		properties: {
-		sandbox: true,
-                webhooks: {
-                    status:
-                        "http://enged-plagiarism-checker.louisefindlay.com/webhook/{STATUS}/" +
-                        scanID,
->>>>>>> 27b35c92edad4a64f8c1e1ddc53eda42d23fd70d
                 },
-                    },                
-},
                 {
                     headers: {
                         Authorization:
                             "Bearer " + process.env.COPYLEAKS_ACCESSTOKEN,
                     },
-                },
+                }
             )
             .then(function (res) {
                 console.info(res);
