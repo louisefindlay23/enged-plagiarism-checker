@@ -21,8 +21,13 @@ octokit.rest.users
             pull_number: 4593,
           }).then((result) => {
 
-        let article = result.data[0].raw_url;
-        console.log(article);
+        result.data.forEach((file) => {
+            if (file.filename.includes("index.md")) {
+                // TODO: Handle excluded author index.md file
+                console.info(file.raw_url);
+            }
+            // TODO: Add CopyLeaks API
+        });
     })
           .catch((err) => {
               console.error(err);
