@@ -34,7 +34,7 @@ octokit.rest.pulls
     .listFiles({
         owner: "section-engineering-education",
         repo: "engineering-education",
-        pull_number: 4593,
+        pull_number: 4594,
     })
     .then((result) => {
         result.data.forEach((file) => {
@@ -74,7 +74,7 @@ function plagarismCheck(article_url) {
         // Scan URL
     } else {
         console.info("Have access token");
-        const scanID = "4594";
+        const scanID = "4595";
         axios
             .put(
                 "https://api.copyleaks.com/v3/businesses/submit/url/" + scanID,
