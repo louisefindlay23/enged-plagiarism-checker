@@ -4,12 +4,28 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const port = "4005";
+app.use(bodyParser.json());
 
 // Initialising Express
 app.listen(port);
 
 app.get("/", (req, res) => {
     res.send("Welcome");
+});
+
+app.post("/webhook", function (req, res) {
+    console.log(req.body);
+    res.status(200).end();
+});
+
+app.post("/webhook/completed", function (req, res) {
+    console.log(req.body);
+    res.status(200).end();
+});
+
+app.post("/webhook/completed/:scanID", function (req, res) {
+    console.log(req.body);
+    res.status(200).end();
 });
 
 // Obtaining article raw file URL from GitHub
@@ -65,7 +81,8 @@ function plagarismCheck(article_url) {
                 key: process.env.COPYLEAKS_APIKEY,
             })
             .then(function (res) {
-                process.env.COPYLEAKS_ACCESSTOKEN = res.data.access_token;
+                //process.env.COPYLEAKS_ACCESSTOKEN = res.data.access_token;
+                console.info;
             })
             .catch(function (err) {
                 console.error(err.response);
@@ -79,8 +96,6 @@ function plagarismCheck(article_url) {
                 "https://api.copyleaks.com/v3/businesses/submit/url/" + scanID,
                 {
                     url: "https://github.com/section-engineering-education/engineering-education/raw/64c8d371e74285fe52bf783d69f20cee15ad803d/content/articles/complete-guide-on-using-sequelize-basic-and-advanced-features/index.md",
-                },
-                {
                     properties: {
                         sandbox: true,
                         webhooks: {
