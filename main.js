@@ -1,34 +1,105 @@
 require("dotenv").config();
 
+// Express
+const express = require("express");
+const app = express();
+const port = "3000";
+
+// Initialising Express
+app.listen(port);
+
+app.get("/", (req, res) => {
+    res.send("Welcome");
+});
+
+// Obtaining article raw file URL from GitHub
 const { Octokit } = require("@octokit/core");
-const { restEndpointMethods } = require("@octokit/plugin-rest-endpoint-methods");
+const {
+    restEndpointMethods,
+} = require("@octokit/plugin-rest-endpoint-methods");
 const MyOctokit = Octokit.plugin(restEndpointMethods);
 
 let octokit = new MyOctokit({ auth: process.env.GITHUB_PAT });
 
 octokit.rest.users
     .getAuthenticated({})
-        .then((result) => {
-          console.info("Success. You are now authenticated with the GitHub API.");
-        })
-        .catch((err) => {
-            console.error(err);
-        });
+    .then((result) => {
+        console.info("Success. You are now authenticated with the GitHub API.");
+    })
+    .catch((err) => {
+        console.error(err);
+    });
 
-        octokit.rest.pulls.listFiles({
-            owner: "section-engineering-education",
-            repo: "engineering-education",
-            pull_number: 4593,
-          }).then((result) => {
-
+octokit.rest.pulls
+    .listFiles({
+        owner: "section-engineering-education",
+        repo: "engineering-education",
+        pull_number: 4593,
+    })
+    .then((result) => {
         result.data.forEach((file) => {
-            if (file.filename.includes("index.md")) {
-                // TODO: Handle excluded author index.md file
-                console.info(file.raw_url);
+            if (
+                file.filename.includes("index.md") &&
+                !file.filename.includes("author")
+            ) {
+                const article_url = file.raw_url;
+                plagarismCheck(article_url);
             }
-            // TODO: Add CopyLeaks API
         });
     })
-          .catch((err) => {
-              console.error(err);
-          });
+    .catch((err) => {
+        console.error(err);
+    });
+
+// TODO: Add CopyLeaks API
+
+function plagarismCheck(article_url) {
+    const axios = require("axios");
+
+    if (!process.env.COPYLEAKS_ACCESSTOKEN) {
+        // Obtain Access Token
+        axios
+            .post("https://id.copyleaks.com/v3/account/login/api", {
+                email: process.env.COPYLEAKS_EMAIL,
+                key: process.env.COPYLEAKS_APIKEY,
+            })
+            .then(function (res) {
+                process.env.COPYLEAKS_ACCESSTOKEN = res.data.access_token;
+            })
+            .catch(function (err) {
+                console.error(err.response);
+            });
+        // Scan URL
+    } else {
+        const scanID = "123";
+        axios
+            .post(
+                "https://api.copyleaks.com/v3/businesses/submit/url/" + scanID,
+                {
+                    url: "https://github.com/section-engineering-education/engineering-education/raw/64c8d371e74285fe52bf783d69f20cee15ad803d/content/articles/complete-guide-on-using-sequelize-basic-and-advanced-features/index.md",
+                },
+                {
+                    properties: {
+                        sandbox: true,
+                        webhooks: {
+                            status:
+                                "http://localhost:3000/webhook/{STATUS}/" +
+                                scanID,
+                        },
+                    },
+                },
+                {
+                    headers: {
+                        Authorization:
+                            "Bearer " + process.env.COPYLEAKS_ACCESSTOKEN,
+                    },
+                }
+            )
+            .then(function (res) {
+                console.info(res);
+            })
+            .catch(function (err) {
+                console.error(err.response);
+            });
+    }
+}
