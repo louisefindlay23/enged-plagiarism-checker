@@ -58,6 +58,7 @@ function plagarismCheck(article_url) {
 
     if (!process.env.COPYLEAKS_ACCESSTOKEN) {
         // Obtain Access Token
+        console.info("Get Access Token");
         axios
             .post("https://id.copyleaks.com/v3/account/login/api", {
                 email: process.env.COPYLEAKS_EMAIL,
@@ -71,6 +72,7 @@ function plagarismCheck(article_url) {
             });
         // Scan URL
     } else {
+        console.info("Have access token");
         const scanID = "123";
         axios
             .put(
@@ -99,7 +101,7 @@ function plagarismCheck(article_url) {
                 console.info(res);
             })
             .catch(function (err) {
-                console.error(err.response);
+                console.error(err);
             });
     }
 }
