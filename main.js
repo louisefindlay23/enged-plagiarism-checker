@@ -74,14 +74,14 @@ function plagarismCheck(article_url) {
         // Scan URL
     } else {
         console.info("Have access token");
-        const scanID = "4593";
+        const scanID = "4594";
         axios
             .put(
                 "https://api.copyleaks.com/v3/businesses/submit/url/" + scanID,
                 {
                 url: "https://github.com/section-engineering-education/engineering-education/raw/64c8d371e74285fe52bf783d69f20cee15ad803d/content/articles/complete-guide-on-using-sequelize-basic-and-advanced-features/index.md",
 		properties: {
-                sandbox: true,
+		sandbox: true,
                 webhooks: {
                     status:
                         "http://enged-plagiarism-checker.louisefindlay.com/webhook/{STATUS}/" +
