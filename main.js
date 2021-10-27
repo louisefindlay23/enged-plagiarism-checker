@@ -4,7 +4,7 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const port = "4005";
-const bodyParser = require('body-parser');
+const bodyParser = require("body-parser");
 app.use(bodyParser.json());
 
 // Initialising Express
@@ -17,6 +17,14 @@ app.get("/", (req, res) => {
 app.post("/webhook/completed/:scanID", function (req, res) {
     console.log(req.body);
     res.status(200).end();
+    axios
+        .get("https://api.copyleaks.com/v3/downloads/" + scanID + "/report.pdf")
+        .then(function (res) {
+            console.info(res);
+        })
+        .catch(function (err) {
+            console.error(err.response);
+        });
 });
 
 // Obtaining article raw file URL from GitHub
@@ -94,7 +102,7 @@ function plagarismCheck(article_url) {
                                 "http://enged-plagiarism-checker.louisefindlay.com/webhook/{STATUS}/" +
                                 scanID,
                         },
-			pdf: {
+                        pdf: {
                             create: true,
                         },
                     },
@@ -106,9 +114,7 @@ function plagarismCheck(article_url) {
                     },
                 }
             )
-            .then(function (res) {
-                console.info(res);
-            })
+            .then(function (res) {})
             .catch(function (err) {
                 console.error(err);
             });
