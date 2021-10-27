@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const axios = require("axios");
+const fs = require("fs");
 
 // Express
 const express = require("express");
@@ -17,21 +18,28 @@ app.get("/", (req, res) => {
 });
 
 app.post("/webhook/completed/:scanID", function (req, res) {
-    console.log(req.body);
+    //console.log(req.body);
     res.status(200).end();
 
-axios
+    axios
         .get(
-            "https://api.copyleaks.com/v3/downloads/" + req.params.scanID + "/report.pdf",
+            "https://api.copyleaks.com/v3/downloads/" +
+                req.params.scanID +
+                "/report.pdf",
             {
                 headers: {
                     Authorization:
                         "Bearer " + process.env.COPYLEAKS_ACCESSTOKEN,
                 },
+
+                responseType: arraybuffer,
             }
         )
         .then(function (res) {
-            console.info(res);
+            console.info(res.data);
+            var base64 = result.data.toString("base64");
+            var binary = result.data.toString("binary");
+            fs.writeFileSync("report.pdf", response.data, "binary");
         })
         .catch(function (err) {
             console.error(err.response);
@@ -80,7 +88,6 @@ octokit.rest.pulls
 // TODO: Add CopyLeaks API
 
 function plagarismCheck(article_url) {
-
     if (!process.env.COPYLEAKS_ACCESSTOKEN) {
         // Obtain Access Token
         console.info("Get Access Token");
