@@ -4,12 +4,28 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const port = "4005";
+app.use(bodyParser.json());
 
 // Initialising Express
 app.listen(port);
 
 app.get("/", (req, res) => {
     res.send("Welcome");
+});
+
+app.post("/webhook", function (req, res) {
+    console.log(req.body);
+    res.status(200).end();
+});
+
+app.post("/webhook/completed", function (req, res) {
+    console.log(req.body);
+    res.status(200).end();
+});
+
+app.post("/webhook/completed/:scanID", function (req, res) {
+    console.log(req.body);
+    res.status(200).end();
 });
 
 // Obtaining article raw file URL from GitHub
@@ -79,6 +95,17 @@ function plagarismCheck(article_url) {
             .put(
                 "https://api.copyleaks.com/v3/businesses/submit/url/" + scanID,
                 {
+<<<<<<< HEAD
+                    url: "https://github.com/section-engineering-education/engineering-education/raw/64c8d371e74285fe52bf783d69f20cee15ad803d/content/articles/complete-guide-on-using-sequelize-basic-and-advanced-features/index.md",
+                    properties: {
+                        sandbox: true,
+                        webhooks: {
+                            status:
+                                "http://enged-plagiarism-checker.louisefindlay.com/webhook/{STATUS}/" +
+                                scanID,
+                        },
+                    },
+=======
                 url: "https://github.com/section-engineering-education/engineering-education/raw/64c8d371e74285fe52bf783d69f20cee15ad803d/content/articles/complete-guide-on-using-sequelize-basic-and-advanced-features/index.md",
 		properties: {
 		sandbox: true,
@@ -86,6 +113,7 @@ function plagarismCheck(article_url) {
                     status:
                         "http://enged-plagiarism-checker.louisefindlay.com/webhook/{STATUS}/" +
                         scanID,
+>>>>>>> 27b35c92edad4a64f8c1e1ddc53eda42d23fd70d
                 },
                     },                
 },
