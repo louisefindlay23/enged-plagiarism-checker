@@ -65,7 +65,8 @@ function plagarismCheck(article_url) {
                 key: process.env.COPYLEAKS_APIKEY,
             })
             .then(function (res) {
-                process.env.COPYLEAKS_ACCESSTOKEN = res.data.access_token;
+                //process.env.COPYLEAKS_ACCESSTOKEN = res.data.access_token;
+                console.info;
             })
             .catch(function (err) {
                 console.error(err.response);
@@ -73,29 +74,27 @@ function plagarismCheck(article_url) {
         // Scan URL
     } else {
         console.info("Have access token");
-        const scanID = "123";
+        const scanID = "4593";
         axios
             .put(
                 "https://api.copyleaks.com/v3/businesses/submit/url/" + scanID,
                 {
-                    url: "https://github.com/section-engineering-education/engineering-education/raw/64c8d371e74285fe52bf783d69f20cee15ad803d/content/articles/complete-guide-on-using-sequelize-basic-and-advanced-features/index.md",
+                url: "https://github.com/section-engineering-education/engineering-education/raw/64c8d371e74285fe52bf783d69f20cee15ad803d/content/articles/complete-guide-on-using-sequelize-basic-and-advanced-features/index.md",
+		properties: {
+                sandbox: true,
+                webhooks: {
+                    status:
+                        "http://enged-plagiarism-checker.louisefindlay.com/webhook/{STATUS}/" +
+                        scanID,
                 },
-                {
-                    properties: {
-                        sandbox: true,
-                        webhooks: {
-                            status:
-                                "http://enged-plagiarism-checker.louisefindlay.com/webhook/{STATUS}/" +
-                                scanID,
-                        },
-                    },
-                },
+                    },                
+},
                 {
                     headers: {
                         Authorization:
                             "Bearer " + process.env.COPYLEAKS_ACCESSTOKEN,
                     },
-                }
+                },
             )
             .then(function (res) {
                 console.info(res);
