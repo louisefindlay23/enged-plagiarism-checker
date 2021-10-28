@@ -90,14 +90,7 @@ app.post("/webhook/completed/:scanID", function (req, res) {
             );
             console.info("Report generated");
             res.sendFile(
-                "./reports/" + req.params.scanID + ".pdf",
-                function (err) {
-                    if (err) {
-                        next(err);
-                    } else {
-                        console.info("Sent to webpage");
-                    }
-                }
+                req.params.scanID + ".pdf", {"root": "./reports"});
             );
         })
         .catch(function (err) {
