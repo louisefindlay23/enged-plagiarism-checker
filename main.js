@@ -12,6 +12,7 @@ const port = "4005";
 
 // Initialising Express
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }))
 
 app.use(express.static("public"));
 app.set("view engine", "ejs");
@@ -87,6 +88,7 @@ app.post("/webhook/completed/:scanID", function (req, res) {
         .then(function (res) {
             res.data.pipe(fs.createWriteStream(req.params.scanID + ".pdf"));
             console.info("Report generated");
+	    res.sendFile(req.params.scanID + ".pdf");
         })
         .catch(function (err) {
             console.error(err.response);
