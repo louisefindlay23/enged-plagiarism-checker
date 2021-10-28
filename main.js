@@ -91,7 +91,6 @@ app.post("/webhook/completed/:scanID", function (req, res) {
             console.info("Report generated");
             res.sendFile(
                 req.params.scanID + ".pdf", {"root": "./reports"});
-            );
         })
         .catch(function (err) {
             console.error(err.response);
