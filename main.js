@@ -22,6 +22,11 @@ app.get("/", (req, res) => {
     res.render("pages/index");
 });
 
+app.get("/file/:scanID", (req, res) => {
+    console.info(req.params.scanID);
+    res.sendFile(req.params.scanID, { root: "./reports" });
+});
+
 app.post("/retrieve-pr", function (req, res) {
     const pr = req.body.pr;
     console.info("Your PR number is " + pr);
@@ -89,8 +94,8 @@ app.post("/webhook/completed/:scanID", function (req, res) {
                 fs.createWriteStream("./reports/" + req.params.scanID + ".pdf")
             );
             console.info("Report generated");
-            res.sendFile(
-                req.params.scanID + ".pdf", {"root": "./reports"});
+            //res.sendFile(req.params.scanID + ".pdf", { root: "./reports" });
+            res.direct("/file/" + req.params.scanID);
         })
         .catch(function (err) {
             console.error(err.response);
