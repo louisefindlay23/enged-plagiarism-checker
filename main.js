@@ -12,7 +12,7 @@ const port = "4005";
 
 // Initialising Express
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(express.static("public"));
 app.set("view engine", "ejs");
@@ -23,7 +23,6 @@ app.get("/", (req, res) => {
 });
 
 app.post("/retrieve-pr", function (req, res) {
-    console.info(req.body);
     const pr = req.body.pr;
     console.info("Your PR number is " + pr);
     // Obtaining article raw file URL from GitHub
@@ -86,9 +85,20 @@ app.post("/webhook/completed/:scanID", function (req, res) {
             }
         )
         .then(function (res) {
-            res.data.pipe(fs.createWriteStream(req.params.scanID + ".pdf"));
+            res.data.pipe(
+                fs.createWriteStream("./reports/" + req.params.scanID + ".pdf")
+            );
             console.info("Report generated");
-	    res.sendFile(req.params.scanID + ".pdf");
+            res.sendFile(
+                "./reports/" + req.params.scanID + ".pdf",
+                function (err) {
+                    if (err) {
+                        next(err);
+                    } else {
+                        console.info("Sent to webpage");
+                    }
+                }
+            );
         })
         .catch(function (err) {
             console.error(err.response);
