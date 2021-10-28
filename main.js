@@ -12,6 +12,7 @@ const port = "4005";
 
 // Initialising Express
 app.use(bodyParser.json());
+
 app.use(express.static("public"));
 app.set("view engine", "ejs");
 app.listen(port);
@@ -21,6 +22,7 @@ app.get("/", (req, res) => {
 });
 
 app.post("/retrieve-pr", function (req, res) {
+    console.info(req.body);
     const pr = req.body.pr;
     console.info("Your PR number is " + pr);
     // Obtaining article raw file URL from GitHub
