@@ -18,7 +18,6 @@ app.get("/", (req, res) => {
 });
 
 app.post("/webhook/completed/:scanID", function (req, res) {
-    //console.log(req.body);
     res.status(200).end();
 
     axios
@@ -31,13 +30,12 @@ app.post("/webhook/completed/:scanID", function (req, res) {
                     Authorization:
                         "Bearer " + process.env.COPYLEAKS_ACCESSTOKEN,
                 },
-		responseType: "stream",
+                responseType: "stream",
             }
         )
         .then(function (res) {
-        console.info(res.data);
-	res.data.pipe(fs.createWriteStream("output.pdf"));
-//fs.writeFileSync("report.pdf", response.data, "binary");
+            res.data.pipe(fs.createWriteStream(req.params.scanID + ".pdf"));
+            console.info("Report generated");
         })
         .catch(function (err) {
             console.error(err.response);
@@ -62,11 +60,13 @@ octokit.rest.users
         console.error(err);
     });
 
+const pr = 4593;
+
 octokit.rest.pulls
     .listFiles({
         owner: "section-engineering-education",
         repo: "engineering-education",
-        pull_number: 4593,
+        pull_number: pr,
     })
     .then((result) => {
         result.data.forEach((file) => {
@@ -82,8 +82,6 @@ octokit.rest.pulls
     .catch((err) => {
         console.error(err);
     });
-
-// TODO: Add CopyLeaks API
 
 function plagarismCheck(article_url) {
     if (!process.env.COPYLEAKS_ACCESSTOKEN) {
@@ -104,7 +102,7 @@ function plagarismCheck(article_url) {
         // Scan URL
     } else {
         console.info("Have access token");
-        const scanID = "4007";
+        const scanID = Math.floor(1000 + Math.random() * 9000);
         axios
             .put(
                 "https://api.copyleaks.com/v3/businesses/submit/url/" + scanID,
