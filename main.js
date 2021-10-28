@@ -14,29 +14,12 @@ const port = "4005";
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-app.use(express.static("public"));
+app.use(express.static("reports"));
 app.set("view engine", "ejs");
 app.listen(port);
 
 app.get("/", (req, res) => {
     res.render("pages/index");
-});
-
-app.get("/file/:scanID", (req, res) => {
-    console.info(req.params.scanID);
-	var options = {
-    root: "./reports",
-  };
-const filename = req.params.scanID + ".pdf";
-res.sendFile(filename, options, function (err) {
-    if (err) {
-      console.error(err);
-      res.status(err.status).end();
-    }
-    else {
-      console.log('Sent:', filename);
-    }
-});
 });
 
 app.post("/retrieve-pr", function (req, res) {
@@ -86,7 +69,6 @@ app.post("/retrieve-pr", function (req, res) {
 
 // Retrieve and download scan PDF
 app.post("/webhook/completed/:scanID", function (req, res) {
-    //res.status(200).send();
 
     axios
         .get(
@@ -106,8 +88,8 @@ app.post("/webhook/completed/:scanID", function (req, res) {
                 fs.createWriteStream("./reports/" + req.params.scanID + ".pdf")
             );
             console.info("Report generated");
-            //res.sendFile(req.params.scanID + ".pdf", { root: "./reports" });
-            res.redirect("/file/" + req.params.scanID);
+            res.redirect("/" + req.params.scanID + ".pdf");
+		
         })
         .catch(function (err) {
             console.error(err);
