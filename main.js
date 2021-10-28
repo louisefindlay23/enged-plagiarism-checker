@@ -6,17 +6,66 @@ const fs = require("fs");
 // Express
 const express = require("express");
 const app = express();
-const port = "4005";
+const ejs = require("ejs");
 const bodyParser = require("body-parser");
-app.use(bodyParser.json());
+const port = "4005";
 
 // Initialising Express
+app.use(bodyParser.json());
+app.use(express.static("public"));
+app.set("view engine", "ejs");
 app.listen(port);
 
 app.get("/", (req, res) => {
-    res.send("Welcome");
+    res.render("pages/index");
 });
 
+app.post("/retrieve-pr", function (req, res) {
+    const pr = req.body.pr;
+    console.info("Your PR number is " + pr);
+    // Obtaining article raw file URL from GitHub
+    const { Octokit } = require("@octokit/core");
+    const {
+        restEndpointMethods,
+    } = require("@octokit/plugin-rest-endpoint-methods");
+    const MyOctokit = Octokit.plugin(restEndpointMethods);
+
+    let octokit = new MyOctokit({ auth: process.env.GITHUB_PAT });
+
+    octokit.rest.users
+        .getAuthenticated({})
+        .then((result) => {
+            console.info(
+                "Success. You are now authenticated with the GitHub API."
+            );
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+
+    octokit.rest.pulls
+        .listFiles({
+            owner: "section-engineering-education",
+            repo: "engineering-education",
+            pull_number: pr,
+        })
+        .then((result) => {
+            result.data.forEach((file) => {
+                if (
+                    file.filename.includes("index.md") &&
+                    !file.filename.includes("author")
+                ) {
+                    const article_url = file.raw_url;
+                    plagarismCheck(article_url);
+                }
+            });
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+});
+
+// Retrieve and download scan PDF
 app.post("/webhook/completed/:scanID", function (req, res) {
     res.status(200).end();
 
@@ -41,47 +90,6 @@ app.post("/webhook/completed/:scanID", function (req, res) {
             console.error(err.response);
         });
 });
-
-// Obtaining article raw file URL from GitHub
-const { Octokit } = require("@octokit/core");
-const {
-    restEndpointMethods,
-} = require("@octokit/plugin-rest-endpoint-methods");
-const MyOctokit = Octokit.plugin(restEndpointMethods);
-
-let octokit = new MyOctokit({ auth: process.env.GITHUB_PAT });
-
-octokit.rest.users
-    .getAuthenticated({})
-    .then((result) => {
-        console.info("Success. You are now authenticated with the GitHub API.");
-    })
-    .catch((err) => {
-        console.error(err);
-    });
-
-const pr = 4593;
-
-octokit.rest.pulls
-    .listFiles({
-        owner: "section-engineering-education",
-        repo: "engineering-education",
-        pull_number: pr,
-    })
-    .then((result) => {
-        result.data.forEach((file) => {
-            if (
-                file.filename.includes("index.md") &&
-                !file.filename.includes("author")
-            ) {
-                const article_url = file.raw_url;
-                plagarismCheck(article_url);
-            }
-        });
-    })
-    .catch((err) => {
-        console.error(err);
-    });
 
 function plagarismCheck(article_url) {
     if (!process.env.COPYLEAKS_ACCESSTOKEN) {
