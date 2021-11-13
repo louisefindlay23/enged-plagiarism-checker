@@ -14,7 +14,7 @@ const port = "4005";
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-app.use(express.static("reports"));
+app.use(express.static("public"));
 app.set("view engine", "ejs");
 app.listen(port);
 
@@ -84,10 +84,13 @@ app.post("/webhook/completed/:scanID", function (req, res) {
                 }
             );
             result.data.pipe(
-                fs.createWriteStream("./reports/" + req.params.scanID + ".pdf")
+                fs.createWriteStream(
+                    "./public/reports/" + req.params.scanID + ".pdf"
+                )
             );
-            console.info("Report generated:" + req.params.scanID + ".pdf");
-            res.redirect("/" + req.params.scanID + ".pdf");
+            console.info(
+                "Report generated: /reports/" + req.params.scanID + ".pdf"
+            );
         } catch (err) {
             console.error(err);
         }
