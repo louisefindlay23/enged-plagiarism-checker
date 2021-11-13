@@ -69,7 +69,6 @@ app.post("/retrieve-pr", function (req, res) {
 
 // Retrieve and download scan PDF
 app.post("/webhook/completed/:scanID", function (req, res) {
-
     axios
         .get(
             "https://api.copyleaks.com/v3/downloads/" +
@@ -89,7 +88,6 @@ app.post("/webhook/completed/:scanID", function (req, res) {
             );
             console.info("Report generated");
             res.redirect("/" + req.params.scanID + ".pdf");
-		
         })
         .catch(function (err) {
             console.error(err);
@@ -107,7 +105,7 @@ function plagarismCheck(article_url) {
             })
             .then(function (res) {
                 //process.env.COPYLEAKS_ACCESSTOKEN = res.data.access_token;
-                console.info;
+                console.info(res.data.access_token);
             })
             .catch(function (err) {
                 console.error(err.response);
@@ -120,7 +118,7 @@ function plagarismCheck(article_url) {
             .put(
                 "https://api.copyleaks.com/v3/businesses/submit/url/" + scanID,
                 {
-                    url: "https://github.com/section-engineering-education/engineering-education/raw/64c8d371e74285fe52bf783d69f20cee15ad803d/content/articles/complete-guide-on-using-sequelize-basic-and-advanced-features/index.md",
+                    url: article_url,
                     properties: {
                         sandbox: true,
                         webhooks: {
