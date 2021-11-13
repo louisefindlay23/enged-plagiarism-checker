@@ -94,6 +94,7 @@ app.post("/webhook/completed/:scanID", function (req, res) {
         .catch(function (err) {
             console.error(err);
         });
+    res.redirect("/" + req.params.scanID + ".pdf");
 });
 
 function redirectPDF(PDF_URL) {
