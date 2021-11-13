@@ -89,15 +89,16 @@ app.post("/webhook/completed/:scanID", function (req, res) {
             console.info(
                 "Report generated: /reports/" + req.params.scanID + ".pdf"
             );
-            location.window.href =
-                "http://enged-plagiarism-checker.louisefindlay.com/" +
-                req.params.scanID +
-                ".pdf";
+            redirectPDF(req.params.scanID + ".pdf");
         })
         .catch(function (err) {
             console.error(err);
         });
 });
+
+function redirectPDF(PDF_URL) {
+    res.redirect("/" + PDF_URL);
+}
 
 function plagarismCheck(article_url) {
     if (!process.env.COPYLEAKS_ACCESSTOKEN) {
