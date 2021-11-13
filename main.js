@@ -86,8 +86,13 @@ app.post("/webhook/completed/:scanID", function (req, res) {
             result.data.pipe(
                 fs.createWriteStream("./reports/" + req.params.scanID + ".pdf")
             );
-            console.info("Report generated: /reports/" + req.params.scanID + ".pdf");
-            res.redirect("/" + req.params.scanID + ".pdf");
+            console.info(
+                "Report generated: /reports/" + req.params.scanID + ".pdf"
+            );
+            location.window.href =
+                "http://enged-plagiarism-checker.louisefindlay.com/" +
+                req.params.scanID +
+                ".pdf";
         })
         .catch(function (err) {
             console.error(err);
