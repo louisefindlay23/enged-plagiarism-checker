@@ -71,7 +71,6 @@ app.post("/retrieve-pr", function (req, res) {
 app.post("/webhook/completed/:scanID", function (req, res) {
     const retrieveScan = async () => {
         try {
-            console.info("Axios started");
             const result = await axios.get(
                 "https://api.copyleaks.com/v3/downloads/" +
                     req.params.scanID +
@@ -84,20 +83,16 @@ app.post("/webhook/completed/:scanID", function (req, res) {
                     responseType: "stream",
                 }
             );
-            console.info("PDF creating");
             result.data.pipe(
                 fs.createWriteStream("./reports/" + req.params.scanID + ".pdf")
             );
-            console.info(
-                "Report generated: /reports/" + req.params.scanID + ".pdf"
-            );
-            console.info("Redirect begun");
+            console.info("Report generated:" + req.params.scanID + ".pdf");
             res.redirect("/" + req.params.scanID + ".pdf");
         } catch (err) {
             console.error(err);
         }
     };
-    console.info(retrieveScan());
+    retrieveScan();
 });
 
 function plagarismCheck(article_url) {
