@@ -69,39 +69,35 @@ app.post("/retrieve-pr", function (req, res) {
 
 // Retrieve and download scan PDF
 app.post("/webhook/completed/:scanID", function (req, res) {
-    const source = axios.CancelToken.source();
-    axios
-        .get(
-            "https://api.copyleaks.com/v3/downloads/" +
-                req.params.scanID +
-                "/report.pdf",
-            {
-                cancelToken: source.token,
-                headers: {
-                    Authorization:
-                        "Bearer " + process.env.COPYLEAKS_ACCESSTOKEN,
-                },
-                responseType: "stream",
-            }
-        )
-        .then(function (result) {
+    const retrieveScan = async () => {
+        try {
+            console.info("Axios started");
+            const result = await axios.get(
+                "https://api.copyleaks.com/v3/downloads/" +
+                    req.params.scanID +
+                    "/report.pdf",
+                {
+                    headers: {
+                        Authorization:
+                            "Bearer " + process.env.COPYLEAKS_ACCESSTOKEN,
+                    },
+                    responseType: "stream",
+                }
+            );
+            console.info("PDF creating");
             result.data.pipe(
                 fs.createWriteStream("./reports/" + req.params.scanID + ".pdf")
             );
             console.info(
                 "Report generated: /reports/" + req.params.scanID + ".pdf"
             );
-            source.cancel();
-        })
-        .catch((thrown) => {
-            if (axios.isCancel(thrown)) {
-                console.info("Redirect activated");
-                res.redirect("/" + req.params.scanID + ".pdf");
-            } else {
-                console.error(thrown);
-            }
-        });
-    res.redirect("/" + req.params.scanID + ".pdf");
+            console.info("Redirect begun");
+            res.redirect("/" + req.params.scanID + ".pdf");
+        } catch (err) {
+            console.error(err);
+        }
+    };
+    console.info(retrieveScan());
 });
 
 function plagarismCheck(article_url) {
