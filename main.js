@@ -95,7 +95,11 @@ app.post("/webhook/completed/:scanID", function (req, res) {
             console.error(err);
         }
     };
-    retrieveScan();
+    retrieveScan().then(function (result) {
+        console.info(result);
+        console.info("Success");
+        res.redirect("/reports/" + req.params.scanID + ".pdf");
+    });
 });
 
 function plagarismCheck(article_url) {
