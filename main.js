@@ -109,16 +109,17 @@ function plagarismCheck(article_url) {
                             const scanId = Math.floor(
                                 1000 + Math.random() * 9000
                             );
+                            const resultID = Math.floor(
+                                1000 + Math.random() * 9000
+                            );
 
                             const model = new CopyleaksExportModel(
                                 `${WEBHOOK_URL}/export/scanId/${scanId}/completion`,
                                 [
                                     // results
                                     {
-                                        id: Math.floor(
-                                            1000 + Math.random() * 9000
-                                        ),
-                                        endpoint: `${WEBHOOK_URL}/export/${scanId}/result/2a1b402420`,
+                                        id: resultID,
+                                        endpoint: `${WEBHOOK_URL}/export/${scanId}/result/${resultID}`,
                                         verb: "POST",
                                         //headers: [
                                         //    ["key", "value"],
@@ -147,7 +148,6 @@ function plagarismCheck(article_url) {
                                 );
                         },
                         (err) => logError("submitUrlAsync - businesses", err)
-                        // Export scan
                     );
             },
             (err) => logError("loginAsync", err)
