@@ -77,9 +77,9 @@ function plagarismCheck(article_url) {
     copyleaks
         .loginAsync(process.env.COPYLEAKS_EMAIL, process.env.COPYLEAKS_APIKEY)
         .then(
-            (res) => {
+            (loginResult) => {
+                logSuccess("loginAsync", loginResult);
                 // TODO: Use res.".expires" to get expiration time and refresh access token
-                console.info(res);
                 var submission = new CopyleaksURLSubmissionModel(
                     "article_url",
                     {
@@ -90,14 +90,34 @@ function plagarismCheck(article_url) {
                     }
                 );
                 copyleaks
-                    .submitUrlAsync("businesses", Date.now() + 2, submission)
+                    .submitUrlAsync(
+                        "businesses",
+                        loginResult,
+                        Date.now() + 2,
+                        submission
+                    )
                     .then(
-                        (res) => console.info(res),
-                        (err) => console.error(err)
+                        (res) => logSuccess("submitUrlAsync - businesses", res),
+                        (err) => logError("submitUrlAsync - businesses", err)
                     );
             },
-            (err) => {
-                console.error(err.response);
-            }
+            (err) => logError("loginAsync", err)
         );
+}
+
+function logError(title, err) {
+    console.error("----------ERROR----------");
+    console.error(`${title}:`);
+    console.error(err);
+    console.error("-------------------------");
+}
+
+function logSuccess(title, result) {
+    console.log("----------SUCCESS----------");
+    console.log(`${title}`);
+    if (result) {
+        console.log(`result:`);
+        console.log(result);
+    }
+    console.log("-------------------------");
 }
