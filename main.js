@@ -1,8 +1,11 @@
 require("dotenv").config();
 
 const fs = require("fs");
+
 const { Copyleaks } = require("plagiarism-checker");
 const copyleaks = new Copyleaks();
+const WEBHOOK_URL =
+    "http://http://enged-plagiarism-checker.louisefindlay.com/webhook";
 
 // Express
 const express = require("express");
@@ -69,53 +72,32 @@ app.post("/retrieve-pr", function (req, res) {
 });
 
 function plagarismCheck(article_url) {
-    if (process.env.COPYLEAKS_ACCESSTOKEN) {
-        // Obtain Access Token
-        console.info("Get Access Token");
-        copyleaks
-            .loginAsync(
-                process.env.COPYLEAKS_EMAIL,
-                process.env.COPYLEAKS_APIKEY
-            )
-            .then(
-                (loginResult) => {
-                    logSuccess("loginAsync", loginResult);
-                },
-                (err) => {
-                    console.error(err.response);
-                }
-            );
-        // Scan URL
-    } else {
-        console.info("Have access token");
-        const scanID = Math.floor(1000 + Math.random() * 9000);
-        axios
-            .put(
-                "https://api.copyleaks.com/v3/businesses/submit/url/" + scanID,
-                {
-                    url: article_url,
-                    properties: {
+    // Obtain Access Token
+    console.info("Get Access Token");
+    copyleaks
+        .loginAsync(process.env.COPYLEAKS_EMAIL, process.env.COPYLEAKS_APIKEY)
+        .then(
+            (res) => {
+                // TODO: Use res.".expires" to get expiration time and refresh access token
+                console.info(res);
+                var submission = new CopyleaksURLSubmissionModel(
+                    "article_url",
+                    {
                         sandbox: true,
                         webhooks: {
-                            status:
-                                "http://enged-plagiarism-checker.louisefindlay.com/webhook/{STATUS}/" +
-                                scanID,
+                            status: `${WEBHOOK_URL}/submit-url-webhook/{STATUS}`,
                         },
-                        pdf: {
-                            create: true,
-                        },
-                    },
-                },
-                {
-                    headers: {
-                        Authorization:
-                            "Bearer " + process.env.COPYLEAKS_ACCESSTOKEN,
-                    },
-                }
-            )
-            .then(function (res) {})
-            .catch(function (err) {
-                console.error(err);
-            });
-    }
+                    }
+                );
+                copyleaks
+                    .submitUrlAsync("businesses", Date.now() + 2, submission)
+                    .then(
+                        (res) => console.info(res),
+                        (err) => console.error(err)
+                    );
+            },
+            (err) => {
+                console.error(err.response);
+            }
+        );
 }
