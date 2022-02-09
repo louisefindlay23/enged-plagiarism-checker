@@ -95,8 +95,7 @@ app.post("/webhook/completed/:scanID", function (req, res) {
             console.error(err);
         }
     };
-    retrieveScan().then(function (result) {
-        console.info(result);
+    retrieveScan().then(function () {
         console.info("Success");
         res.redirect("/reports/" + req.params.scanID + ".pdf");
     });
