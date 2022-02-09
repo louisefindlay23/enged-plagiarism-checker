@@ -12,8 +12,7 @@ const {
     CopyleaksExportModel,
 } = require("plagiarism-checker");
 const copyleaks = new Copyleaks();
-const WEBHOOK_URL =
-    "http://http://enged-plagiarism-checker.louisefindlay.com/webhook";
+const WEBHOOK_URL = "http://enged-plagiarism-checker.louisefindlay.com/webhook";
 
 // Express
 const express = require("express");
@@ -96,23 +95,21 @@ function plagarismCheck(article_url) {
                         status: `${WEBHOOK_URL}/submit-url-webhook/{STATUS}`,
                     },
                 });
+                const scanID = Date.now() + 2;
                 copyleaks
                     .submitUrlAsync(
                         "businesses",
                         loginResult,
-                        Date.now() + 2,
+                        scanID,
                         submission
                     )
                     .then(
                         (res) => {
                             logSuccess("submitUrlAsync - businesses", res);
-                            const scanId = Math.floor(
-                                1000 + Math.random() * 9000
-                            );
                             const resultID = Math.floor(
                                 1000 + Math.random() * 9000
                             );
-
+                            console.log(scanID);
                             const model = new CopyleaksExportModel(
                                 `${WEBHOOK_URL}/export/scanId/${scanId}/completion`,
                                 [
