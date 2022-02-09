@@ -1,7 +1,8 @@
 require("dotenv").config();
 
-const axios = require("axios");
 const fs = require("fs");
+const { Copyleaks } = require("plagiarism-checker");
+const copyleaks = new Copyleaks();
 
 // Express
 const express = require("express");
@@ -67,56 +68,23 @@ app.post("/retrieve-pr", function (req, res) {
         });
 });
 
-// Retrieve and download scan PDF
-app.post("/webhook/completed/:scanID", function (req, res) {
-    const retrieveScan = async () => {
-        try {
-            const result = await axios.get(
-                "https://api.copyleaks.com/v3/downloads/" +
-                    req.params.scanID +
-                    "/report.pdf",
-                {
-                    headers: {
-                        Authorization:
-                            "Bearer " + process.env.COPYLEAKS_ACCESSTOKEN,
-                    },
-                    responseType: "stream",
-                }
-            );
-            result.data.pipe(
-                fs.createWriteStream(
-                    "./public/reports/" + req.params.scanID + ".pdf"
-                )
-            );
-            console.info(
-                "Report generated: /reports/" + req.params.scanID + ".pdf"
-            );
-        } catch (err) {
-            console.error(err);
-        }
-    };
-    retrieveScan().then(function () {
-        console.info("Success");
-        res.redirect("/reports/" + req.params.scanID + ".pdf");
-    });
-});
-
 function plagarismCheck(article_url) {
-    if (!process.env.COPYLEAKS_ACCESSTOKEN) {
+    if (process.env.COPYLEAKS_ACCESSTOKEN) {
         // Obtain Access Token
         console.info("Get Access Token");
-        axios
-            .post("https://id.copyleaks.com/v3/account/login/api", {
-                email: process.env.COPYLEAKS_EMAIL,
-                key: process.env.COPYLEAKS_APIKEY,
-            })
-            .then(function (res) {
-                //process.env.COPYLEAKS_ACCESSTOKEN = res.data.access_token;
-                console.info(res.data.access_token);
-            })
-            .catch(function (err) {
-                console.error(err.response);
-            });
+        copyleaks
+            .loginAsync(
+                process.env.COPYLEAKS_EMAIL,
+                process.env.COPYLEAKS_APIKEY
+            )
+            .then(
+                (loginResult) => {
+                    logSuccess("loginAsync", loginResult);
+                },
+                (err) => {
+                    console.error(err.response);
+                }
+            );
         // Scan URL
     } else {
         console.info("Have access token");
