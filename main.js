@@ -99,45 +99,51 @@ function plagarismCheck(article_url) {
                 .submitUrlAsync("businesses", loginResult, scanID, submission)
                 .then((res) => {
                     logSuccess("submitUrlAsync - businesses", res);
-                    exportReport(scanID);
+                    exportReport(loginResult, scanID).then(function () {
+                        console.info("Success");
+                    });
                 });
         });
 }
-function exportReport(loginResult, scanID) {
+const exportReport = async (loginResult, scanID) => {
     const resultID = Math.floor(1000 + Math.random() * 9000);
-    const model = new CopyleaksExportModel(
-        `${WEBHOOK_URL}/export/scanId/${scanID}/completion`,
-        [
-            // results
+    try {
+        const model = await new CopyleaksExportModel(
+            `${WEBHOOK_URL}/export/scanId/${scanID}/completion`,
+            [
+                // results
+                {
+                    id: resultID,
+                    endpoint: `${WEBHOOK_URL}/export/${scanID}/result/${resultID}`,
+                    verb: "POST",
+                    //headers: [
+                    //    ["key", "value"],
+                    //    ["key2", "value2"],
+                    // ],
+                },
+            ],
             {
-                id: resultID,
-                endpoint: `${WEBHOOK_URL}/export/${scanID}/result/${resultID}`,
+                // crawled version
+                endpoint: `${WEBHOOK_URL}/export/${scanID}/crawled-version`,
                 verb: "POST",
-                //headers: [
-                //    ["key", "value"],
-                //    ["key2", "value2"],
-                // ],
-            },
-        ],
-        {
-            // crawled version
-            endpoint: `${WEBHOOK_URL}/export/${scanID}/crawled-version`,
-            verb: "POST",
-            //  headers: [
-            //      ["key", "value"],
-            //      ["key2", "value2"],
-            //  ],
-        }
-    );
+                //  headers: [
+                //      ["key", "value"],
+                //      ["key2", "value2"],
+                //  ],
+            }
+        );
 
-    copyleaks.exportAsync(loginResult, scanID, scanID, model).then(
-        (res) => logSuccess("exportAsync", res),
-        (err) => {
-            logError("exportAsync", err);
-        }
-    ),
-        (err) => logError("submitUrlAsync - businesses", err);
-}
+        copyleaks.exportAsync(loginResult, scanID, scanID, model).then(
+            (res) => logSuccess("exportAsync", res),
+            (err) => {
+                logError("exportAsync", err);
+            }
+        ),
+            (err) => logError("submitUrlAsync - businesses", err);
+    } catch (err) {
+        console.error(err);
+    }
+};
 
 function logError(title, err) {
     console.error("----------ERROR----------");
