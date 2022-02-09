@@ -2,7 +2,15 @@ require("dotenv").config();
 
 const fs = require("fs");
 
-const { Copyleaks } = require("plagiarism-checker");
+const {
+    Copyleaks,
+    CopyleaksConfig,
+    CopyleaksURLSubmissionModel,
+    CopyleaksFileSubmissionModel,
+    CopyleaksFileOcrSubmissionModel,
+    CopyleaksDeleteRequestModel,
+    CopyleaksExportModel,
+} = require("plagiarism-checker");
 const copyleaks = new Copyleaks();
 const WEBHOOK_URL =
     "http://http://enged-plagiarism-checker.louisefindlay.com/webhook";
@@ -80,15 +88,13 @@ function plagarismCheck(article_url) {
             (loginResult) => {
                 logSuccess("loginAsync", loginResult);
                 // TODO: Use res.".expires" to get expiration time and refresh access token
-                var submission = new CopyleaksURLSubmissionModel(
-                    "article_url",
-                    {
-                        sandbox: true,
-                        webhooks: {
-                            status: `${WEBHOOK_URL}/submit-url-webhook/{STATUS}`,
-                        },
-                    }
-                );
+                console.info(article_url);
+                var submission = new CopyleaksURLSubmissionModel(article_url, {
+                    sandbox: true,
+                    webhooks: {
+                        status: `${WEBHOOK_URL}/submit-url-webhook/{STATUS}`,
+                    },
+                });
                 copyleaks
                     .submitUrlAsync(
                         "businesses",
