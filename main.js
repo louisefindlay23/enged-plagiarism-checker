@@ -89,6 +89,7 @@ function plagarismCheck(article_url) {
                 logSuccess("loginAsync", loginResult);
                 // TODO: Use res.".expires" to get expiration time and refresh access token
                 console.info(article_url);
+                // Submit URL to Copyleaks
                 var submission = new CopyleaksURLSubmissionModel(article_url, {
                     sandbox: true,
                     webhooks: {
@@ -103,8 +104,50 @@ function plagarismCheck(article_url) {
                         submission
                     )
                     .then(
-                        (res) => logSuccess("submitUrlAsync - businesses", res),
+                        (res) => {
+                            logSuccess("submitUrlAsync - businesses", res);
+                            const scanId = Math.floor(
+                                1000 + Math.random() * 9000
+                            );
+
+                            const model = new CopyleaksExportModel(
+                                `${WEBHOOK_URL}/export/scanId/${scanId}/completion`,
+                                [
+                                    // results
+                                    {
+                                        id: Math.floor(
+                                            1000 + Math.random() * 9000
+                                        ),
+                                        endpoint: `${WEBHOOK_URL}/export/${scanId}/result/2a1b402420`,
+                                        verb: "POST",
+                                        //headers: [
+                                        //    ["key", "value"],
+                                        //    ["key2", "value2"],
+                                        // ],
+                                    },
+                                ],
+                                {
+                                    // crawled version
+                                    endpoint: `${WEBHOOK_URL}/export/${scanId}/crawled-version`,
+                                    verb: "POST",
+                                    //  headers: [
+                                    //      ["key", "value"],
+                                    //      ["key2", "value2"],
+                                    //  ],
+                                }
+                            );
+
+                            copyleaks
+                                .exportAsync(loginResult, scanId, scanId, model)
+                                .then(
+                                    (res) => logSuccess("exportAsync", res),
+                                    (err) => {
+                                        logError("exportAsync", err);
+                                    }
+                                );
+                        },
                         (err) => logError("submitUrlAsync - businesses", err)
+                        // Export scan
                     );
             },
             (err) => logError("loginAsync", err)
