@@ -83,72 +83,60 @@ function plagarismCheck(article_url) {
     console.info("Get Access Token");
     copyleaks
         .loginAsync(process.env.COPYLEAKS_EMAIL, process.env.COPYLEAKS_APIKEY)
-        .then(
-            (loginResult) => {
-                logSuccess("loginAsync", loginResult);
-                // TODO: Use res.".expires" to get expiration time and refresh access token
-                console.info(article_url);
-                // Submit URL to Copyleaks
-                var submission = new CopyleaksURLSubmissionModel(article_url, {
-                    sandbox: true,
-                    webhooks: {
-                        status: `${WEBHOOK_URL}/submit-url-webhook/{STATUS}`,
-                    },
+        .then((loginResult) => {
+            logSuccess("loginAsync", loginResult);
+            // TODO: Use res.".expires" to get expiration time and refresh access token
+            console.info(article_url);
+            // Submit URL to Copyleaks
+            var submission = new CopyleaksURLSubmissionModel(article_url, {
+                sandbox: true,
+                webhooks: {
+                    status: `${WEBHOOK_URL}/submit-url-webhook/{STATUS}`,
+                },
+            });
+            const scanID = Date.now() + 2;
+            copyleaks
+                .submitUrlAsync("businesses", loginResult, scanID, submission)
+                .then((res) => {
+                    logSuccess("submitUrlAsync - businesses", res);
+                    exportReport(scanID);
                 });
-                const scanID = Date.now() + 2;
-                copyleaks
-                    .submitUrlAsync(
-                        "businesses",
-                        loginResult,
-                        scanID,
-                        submission
-                    )
-                    .then(
-                        (res) => {
-                            logSuccess("submitUrlAsync - businesses", res);
-                            const resultID = Math.floor(
-                                1000 + Math.random() * 9000
-                            );
-                            console.log(scanID);
-                            const model = new CopyleaksExportModel(
-                                `${WEBHOOK_URL}/export/scanId/${scanId}/completion`,
-                                [
-                                    // results
-                                    {
-                                        id: resultID,
-                                        endpoint: `${WEBHOOK_URL}/export/${scanId}/result/${resultID}`,
-                                        verb: "POST",
-                                        //headers: [
-                                        //    ["key", "value"],
-                                        //    ["key2", "value2"],
-                                        // ],
-                                    },
-                                ],
-                                {
-                                    // crawled version
-                                    endpoint: `${WEBHOOK_URL}/export/${scanId}/crawled-version`,
-                                    verb: "POST",
-                                    //  headers: [
-                                    //      ["key", "value"],
-                                    //      ["key2", "value2"],
-                                    //  ],
-                                }
-                            );
-
-                            copyleaks
-                                .exportAsync(loginResult, scanId, scanId, model)
-                                .then(
-                                    (res) => logSuccess("exportAsync", res),
-                                    (err) => {
-                                        logError("exportAsync", err);
-                                    }
-                                );
-                        },
-                        (err) => logError("submitUrlAsync - businesses", err)
-                    );
+        });
+}
+function exportReport(loginResult, scanID) {
+    const resultID = Math.floor(1000 + Math.random() * 9000);
+    const model = new CopyleaksExportModel(
+        `${WEBHOOK_URL}/export/scanId/${scanID}/completion`,
+        [
+            // results
+            {
+                id: resultID,
+                endpoint: `${WEBHOOK_URL}/export/${scanID}/result/${resultID}`,
+                verb: "POST",
+                //headers: [
+                //    ["key", "value"],
+                //    ["key2", "value2"],
+                // ],
             },
-            (err) => logError("loginAsync", err)
-        );
+        ],
+        {
+            // crawled version
+            endpoint: `${WEBHOOK_URL}/export/${scanID}/crawled-version`,
+            verb: "POST",
+            //  headers: [
+            //      ["key", "value"],
+            //      ["key2", "value2"],
+            //  ],
+        }
+    );
+
+    copyleaks.exportAsync(loginResult, scanID, scanID, model).then(
+        (res) => logSuccess("exportAsync", res),
+        (err) => {
+            logError("exportAsync", err);
+        }
+    ),
+        (err) => logError("submitUrlAsync - businesses", err);
 }
 
 function logError(title, err) {
