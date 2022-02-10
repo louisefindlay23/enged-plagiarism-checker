@@ -79,14 +79,13 @@ app.post("/retrieve-pr", function (req, res) {
         });
 });
 
-app.post(
-    `${WEBHOOK_URL}/export/scanId/${scanID}/completion`,
-    function (req, res) {
-        console.info("Webhook posted");
-        console.info(req.body);
-        nextTick();
-    }
-);
+const scanID = Date.now() + 2;
+
+app.post(`${WEBHOOK_URL}/submit/completed/${scanID}`, function (req, res) {
+    console.info("Webhook posted");
+    console.info(req.body);
+    next();
+});
 
 function plagarismCheck(article_url) {
     // Obtain Access Token
@@ -101,10 +100,9 @@ function plagarismCheck(article_url) {
             var submission = new CopyleaksURLSubmissionModel(article_url, {
                 sandbox: true,
                 webhooks: {
-                    status: `${WEBHOOK_URL}/submit-url-webhook/{STATUS}`,
+                    status: `${WEBHOOK_URL}/submit/{STATUS}`,
                 },
             });
-            const scanID = Date.now() + 2;
             copyleaks
                 .submitUrlAsync("businesses", loginResult, scanID, submission)
                 .then((res) => {
@@ -162,6 +160,7 @@ function logError(title, err) {
 function logSuccess(title, result) {
     console.log("----------SUCCESS----------");
     console.log(`${title}`);
+    console.log(result);
     if (result) {
         console.log(`result:`);
         console.log(result);
