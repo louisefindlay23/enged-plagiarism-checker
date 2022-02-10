@@ -103,16 +103,34 @@ function plagarismCheck(article_url) {
                 },
             });
             copyleaks
+                .submitUrlAsync(
+                    "education",
+                    loginResult,
+                    Date.now() + 1,
+                    submission
+                )
+                .then(
+                    (res) => logSuccess("submitUrlAsync - education", res),
+                    (err) => {
+                        logError("submitUrlAsync - education", err);
+                    }
+                );
+
+            copyleaks
                 .submitUrlAsync("businesses", loginResult, scanID, submission)
-                .then((result) => {
-                    logSuccess("submitUrlAsync - businesses", result);
-                    console.info(result);
-                    //exportReport(loginResult, scanID).then(function () {
-                    //console.info("Success");
-                    //});
-                });
+                .then(
+                    (res) => logSuccess("submitUrlAsync - businesses", res),
+                    (err) => logError("submitUrlAsync - businesses", err)
+                );
+            //{
+            //logSuccess("submitUrlAsync - businesses", result);
+            //console.info(result);
+            //exportReport(loginResult, scanID).then(function () {
+            //console.info("Success");
+            //});
         });
 }
+
 function exportReport(loginResult, scanID) {
     const resultID = Math.floor(1000 + Math.random() * 9000);
 
