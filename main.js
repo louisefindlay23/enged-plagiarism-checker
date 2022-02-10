@@ -81,7 +81,7 @@ app.post("/retrieve-pr", function (req, res) {
 
 const scanID = Date.now() + 2;
 
-app.post(`${WEBHOOK_URL}/submit/completed/${scanID}`, function (req, res) {
+app.post(WEBHOOK_URL + "/submit/completed/:scanID", function (req, res) {
     console.info("Webhook posted");
     console.info(req.body);
     next();
@@ -102,20 +102,6 @@ function plagarismCheck(article_url) {
                     status: `${WEBHOOK_URL}/submit/{STATUS}`,
                 },
             });
-            copyleaks
-                .submitUrlAsync(
-                    "education",
-                    loginResult,
-                    Date.now() + 1,
-                    submission
-                )
-                .then(
-                    (res) => logSuccess("submitUrlAsync - education", res),
-                    (err) => {
-                        logError("submitUrlAsync - education", err);
-                    }
-                );
-
             copyleaks
                 .submitUrlAsync("businesses", loginResult, scanID, submission)
                 .then(
