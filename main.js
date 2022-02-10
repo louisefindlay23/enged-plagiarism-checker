@@ -95,7 +95,6 @@ function plagarismCheck(article_url) {
         .then((loginResult) => {
             logSuccess("loginAsync", loginResult);
             // TODO: Use res.".expires" to get expiration time and refresh access token
-            console.info(article_url);
             // Submit URL to Copyleaks
             var submission = new CopyleaksURLSubmissionModel(article_url, {
                 sandbox: true,
@@ -107,9 +106,10 @@ function plagarismCheck(article_url) {
                 .submitUrlAsync("businesses", loginResult, scanID, submission)
                 .then((res) => {
                     logSuccess("submitUrlAsync - businesses", res);
-                    exportReport(loginResult, scanID).then(function () {
-                        console.info("Success");
-                    });
+                    console.info(res);
+                    //exportReport(loginResult, scanID).then(function () {
+                    //console.info("Success");
+                    //});
                 });
         });
 }
@@ -160,7 +160,6 @@ function logError(title, err) {
 function logSuccess(title, result) {
     console.log("----------SUCCESS----------");
     console.log(`${title}`);
-    console.log(result);
     if (result) {
         console.log(`result:`);
         console.log(result);
