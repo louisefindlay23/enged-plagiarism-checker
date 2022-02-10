@@ -104,9 +104,9 @@ function plagarismCheck(article_url) {
             });
             copyleaks
                 .submitUrlAsync("businesses", loginResult, scanID, submission)
-                .then((res) => {
-                    logSuccess("submitUrlAsync - businesses", res);
-                    console.info(res);
+                .then((result) => {
+                    logSuccess("submitUrlAsync - businesses", result);
+                    console.info(result);
                     //exportReport(loginResult, scanID).then(function () {
                     //console.info("Success");
                     //});
