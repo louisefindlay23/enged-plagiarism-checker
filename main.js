@@ -23,7 +23,7 @@ const bodyParser = require("body-parser");
 const port = "4005";
 
 // Initialising Express
-app.use(bodyParser.json());
+app.use(express.json({ limit: "25mb" }));
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(express.static("public"));
@@ -105,7 +105,16 @@ app.post("/webhook/completed/:scanID", function (req, res) {
               headers: [
                 ["content-type", "application/json"],
               ],
-        }
+        },
+        3, 
+        null, 
+        {
+            endpoint: `${WEBHOOK_URL}/export/${scanID}/pdf-report`,
+            verb: "POST",
+            headers: [
+            ["content-type", "application/json"],
+            ],
+        },
     );
 
     copyleaks.exportAsync(loginResult, scanID, exportID, model).then(
@@ -123,19 +132,25 @@ app.post("/webhook/export/:scanID/completion", function (req, res) {
     console.info(req.body);
 });
 
+app.post("/webhook/export/:exportID/completion", function (req, res) {
+    console.info("Hit export proper complete webhook");
+    console.info(req.body);
+});
+
 app.post("/webhook/export/:scanID/results/:requestID", function (req, res) {
     console.info("Hit Results complete webhook");
-    console.info(req.body);
+    //console.info(req.body);
 });
 
 app.post("/webhook/export/:scanID/pdf-report", function (req, res) {
     console.info("Hit PDF Report complete webhook");
     console.info(req.body);
+    console.info(res);
 });
 
 app.post("/webhook/export/:exportID/crawled-version", function (req, res) {
     console.info("Hit Crawled Version complete webhook");
-    console.info(req.body);
+    //console.info(req.body);
 });
 
 
@@ -152,6 +167,9 @@ async function plagarismCheck(article_url) {
                 sandbox: true,
                 webhooks: {
                     status: `${WEBHOOK_URL}/{STATUS}/${scanID}`,
+                },
+                pdf: {
+                    create: true,
                 },
             });
             copyleaks
