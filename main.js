@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const fs = require("fs");
+const axios = require("axios");
 
 const {
     Copyleaks,
@@ -65,29 +66,50 @@ app.post("/retrieve-pr", function (req, res) {
         })
         .then((result) => {
             result.data.forEach((file) => {
-                if (
-                    file.filename.includes("index.md") &&
-                    !file.filename.includes("author")
-                ) {
+                if (file.filename.includes("index.md") && !file.filename.includes("author")) {
                     const article_url = file.raw_url;
-                    plagarismCheck(article_url);
+                    plagarismCheck(article_url).then((result) => console.log(result));
                 }
-            });
         })
-        .catch((err) => {
-            console.error(err);
-        });
+    })
 });
 
 const scanID = Date.now() + 2;
+const exportID = Date.now() + 3;
 
-app.post(WEBHOOK_URL + "/submit/completed/:scanID", function (req, res) {
+app.post("/webhook/completed/:scanID", function (req, res) {
     console.info("Webhook posted");
     console.info(req.body);
-    next();
+    copyleaks
+        .loginAsync(process.env.COPYLEAKS_EMAIL, process.env.COPYLEAKS_APIKEY)
+        .then((loginResult) => {
+            logSuccess("loginAsync", loginResult);
+            exportReport(loginResult, scanID);
+        });
 });
 
-function plagarismCheck(article_url) {
+app.post("/webhook/export/:scanID/completion", function (req, res) {
+    console.info("Hit export complete webhook");
+    console.info(req.body);
+});
+
+app.post("/webhook/export/:scanID/results/:requestID", function (req, res) {
+    console.info("Hit Results complete webhook");
+    console.info(req.body);
+});
+
+app.post("/webhook/export/:exportID/pdf-report", function (req, res) {
+    console.info("Hit PDF Report complete webhook");
+    console.info(req.body);
+});
+
+app.post("/webhook/export/:exportID/crawled-version", function (req, res) {
+    console.info("Hit Crawled Version complete webhook");
+    console.info(req.body);
+});
+
+
+async function plagarismCheck(article_url) {
     // Obtain Access Token
     console.info("Get Access Token");
     copyleaks
@@ -99,53 +121,46 @@ function plagarismCheck(article_url) {
             var submission = new CopyleaksURLSubmissionModel(article_url, {
                 sandbox: true,
                 webhooks: {
-                    status: `${WEBHOOK_URL}/submit/{STATUS}`,
+                    status: `${WEBHOOK_URL}/{STATUS}/${scanID}`,
                 },
             });
             copyleaks
                 .submitUrlAsync("businesses", loginResult, scanID, submission)
-                .then(
-                    (res) => logSuccess("submitUrlAsync - businesses", res),
+                .then((res) =>
+                        logSuccess("submitUrlAsync - businesses", res),
                     (err) => logError("submitUrlAsync - businesses", err)
-                );
-            //{
-            //logSuccess("submitUrlAsync - businesses", result);
-            //console.info(result);
-            //exportReport(loginResult, scanID).then(function () {
-            //console.info("Success");
-            //});
-        });
+            //logSuccess("submitUrlAsync - businesses", res);
+            //console.info(res);
+);
+});
 }
 
 function exportReport(loginResult, scanID) {
-    const resultID = Math.floor(1000 + Math.random() * 9000);
-
+    const requestID = req.body.results.internet[0].id;
     const model = new CopyleaksExportModel(
-        `${WEBHOOK_URL}/export/scanId/${scanID}/completion`,
+        `${WEBHOOK_URL}/export/${scanID}/completion`,
         [
             // results
             {
-                id: resultID,
-                endpoint: `${WEBHOOK_URL}/export/${scanID}/result/${resultID}`,
+                id: requestID,
+                endpoint: `${WEBHOOK_URL}/export/${scanID}/result/${requestID}`,
                 verb: "POST",
-                //headers: [
-                //    ["key", "value"],
-                //    ["key2", "value2"],
-                // ],
+                headers: [
+                    ["content-type", "application/json"],
+                 ],
             },
         ],
         {
             // crawled version
             endpoint: `${WEBHOOK_URL}/export/${scanID}/crawled-version`,
             verb: "POST",
-            //  headers: [
-            //      ["key", "value"],
-            //      ["key2", "value2"],
-            //  ],
+              headers: [
+                ["content-type", "application/json"],
+              ],
         }
     );
 
-    copyleaks.exportAsync(loginResult, scanID, scanID, model).then(
+    copyleaks.exportAsync(loginResult, scanID, exportID, model).then(
         (res) => logSuccess("exportAsync", res),
         (err) => {
             logError("exportAsync", err);
