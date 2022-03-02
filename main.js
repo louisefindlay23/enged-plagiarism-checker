@@ -60,15 +60,20 @@ app.post("/retrieve-pr", function (req, res) {
         //console.info(github_response);
         pr = github_response.number;
         const prStatus = github_response.action;
+        console.info(prStatus);
         // Only continue if PR has been created
         /* if (prStatus === "opened") {
             console.info("PR has been created");
             //getPR(pr);
         } */
-        // Only continue is plagarism check label is present
+        // Only continue is a PR has just been labelled and plagarism check label is present
+
         let prLabels = github_response.pull_request.labels;
         prLabels.forEach((label) => {
-            if (label.name === "needs plagiarism check") {
+            if (
+                label.name === "needs plagiarism check" &&
+                prStatus === "labeled"
+            ) {
                 console.info("Plagiarism Label found");
                 getPR(pr);
             }
@@ -154,7 +159,6 @@ app.post("/webhook/completed/:scanID", function (req, res) {
                                     `Report generated: /reports/${req.params.scanID}.pdf`
                                 );
                                 // Download Finished
-                                // TODO: Fix repetition (i.e. multiple comments posted) by ending post request
                             });
                             report.on("error", (err) => console.error(err));
                         } else {
