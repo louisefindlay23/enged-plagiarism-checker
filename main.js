@@ -16,6 +16,7 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 const port = process.env.PORT;
+const ejs = require(ejs);
 
 // Initialising Express
 app.use(express.json());
