@@ -8,6 +8,7 @@ const {
     CopyleaksURLSubmissionModel,
 } = require("plagiarism-checker");
 const copyleaks = new Copyleaks();
+// TODO: Change to SSL and change domain
 const WEBHOOK_URL = "http://enged-plagiarism-checker.louisefindlay.com/webhook";
 
 // Express
@@ -56,13 +57,27 @@ app.post("/retrieve-pr", function (req, res) {
         let newArray = [];
         newArray.push(github_response);
         github_response = JSON.parse(newArray);
+        //console.info(github_response);
         pr = github_response.number;
-        // TODO: Only continue is plagarism check needed label is present
+        const prStatus = github_response.action;
+        // Only continue if PR has been created
+        /* if (prStatus === "opened") {
+            console.info("PR has been created");
+            //getPR(pr);
+        } */
+        // Only continue is plagarism check label is present
+        let prLabels = github_response.pull_request.labels;
+        prLabels.forEach((label) => {
+            if (label.name === "needs plagiarism check") {
+                console.info("Plagiarism Label found");
+                //getPR(pr);
+            }
+        });
     } else {
         pr = req.body.pr;
+        //getPR(pr);
     }
     console.info(`Your PR Number is ${pr}`);
-    getPR(pr);
 });
 
 // Obtaining article raw file URL from GitHub
@@ -90,7 +105,7 @@ function getPR(pr) {
                 ) {
                     const article_url = file.raw_url;
                     plagarismCheck(article_url)
-                        .then((result) => console.log(result))
+                        .then((result) => console.info(result))
                         .catch((err) => {
                             console.error(err);
                         });
@@ -240,11 +255,11 @@ function logError(title, err) {
 }
 
 function logSuccess(title, result) {
-    console.log("----------SUCCESS----------");
-    console.log(`${title}`);
+    console.info("----------SUCCESS----------");
+    console.info(`${title}`);
     if (result) {
-        console.log(`result:`);
-        console.log(result);
+        console.info(`result:`);
+        console.info(result);
     }
-    console.log("-------------------------");
+    console.info("-------------------------");
 }
