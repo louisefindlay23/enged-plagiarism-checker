@@ -70,7 +70,7 @@ app.post("/retrieve-pr", function (req, res) {
         prLabels.forEach((label) => {
             if (label.name === "needs plagiarism check") {
                 console.info("Plagiarism Label found");
-                //getPR(pr);
+                getPR(pr);
             }
         });
     } else {
@@ -92,7 +92,7 @@ function getPR(pr) {
     let octokit = new MyOctokit({ auth: process.env.GITHUB_PAT });
     octokit.rest.pulls
         .listFiles({
-            // TODO: Switch back to EngEd Repo
+            // TODO: Change back to EngEd Repo
             owner: "louisefindlay23",
             repo: "engineering-education",
             pull_number: pr,
@@ -104,7 +104,7 @@ function getPR(pr) {
                     !file.filename.includes("author")
                 ) {
                     const article_url = file.raw_url;
-                    plagarismCheck(article_url)
+                    plagarismCheck(article_url, pr)
                         .then((result) => console.info(result))
                         .catch((err) => {
                             console.error(err);
@@ -187,8 +187,8 @@ app.post("/webhook/completed/:scanID", function (req, res) {
                         console.error(err);
                     });
 
-                // TODO: Retrive PR number from earlier to post comment to same PR
-                const postPR = 21;
+                const postPR = req.body.developerPayload;
+                console.info(`PR number is ${postPR} for commenting`);
                 const comment = `Plagiarism Report downloaded. View at: http://enged-plagiarism-checker.louisefindlay.com/reports/${req.params.scanID}.pdf`;
                 // TODO: Change back to EngEd repo
                 octokit.rest.issues
@@ -202,7 +202,6 @@ app.post("/webhook/completed/:scanID", function (req, res) {
                         console.info(
                             `Posted comment: ${comment} on PR ${postPR}`
                         );
-                        console.info(result);
                         res.end();
                     })
                     .catch((err) => {
@@ -215,9 +214,8 @@ app.post("/webhook/completed/:scanID", function (req, res) {
         });
 });
 
-async function plagarismCheck(article_url) {
+async function plagarismCheck(article_url, pr) {
     // Obtain Access Token
-    console.info("Logging into CopyLeaks API");
     copyleaks
         .loginAsync(process.env.COPYLEAKS_EMAIL, process.env.COPYLEAKS_APIKEY)
         .then((loginResult) => {
@@ -225,6 +223,7 @@ async function plagarismCheck(article_url) {
             // Submit URL to Copyleaks
             var submission = new CopyleaksURLSubmissionModel(article_url, {
                 sandbox: true,
+                developerPayload: pr,
                 webhooks: {
                     status: `${WEBHOOK_URL}/{STATUS}/${scanID}`,
                 },
@@ -238,8 +237,6 @@ async function plagarismCheck(article_url) {
                 .then(
                     (res) => logSuccess("submitUrlAsync - businesses", res),
                     (err) => logError("submitUrlAsync - businesses", err)
-                    //logSuccess("submitUrlAsync - businesses", res);
-                    //console.info(res);
                 );
         })
         .catch((err) => {

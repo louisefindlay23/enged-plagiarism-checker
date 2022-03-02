@@ -4,7 +4,8 @@
     "description": "Automate CopyLeaks API checking on EngEd PRs",
     "main": "main.js",
     "scripts": {
-        "start": "node main.js"
+        "start": "node main.js",
+        "dev": "pm2 flush enged-plagiarism-checker && pm2 restart enged-plagiarism-checker && pm2 logs enged-plagiarism-checker"
     },
     "repository": {
         "type": "git",
