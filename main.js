@@ -105,26 +105,16 @@ app.post("/webhook/completed/:scanID", function (req, res) {
                             responseType: "stream",
                         }
                     );
-                    fs.access(`public/reports/`, (error) => {
-                        if (!error) {
-                            console.info("Reports directory exists");
-                            const report = fs.createWriteStream(
-                                `public/reports/${req.params.scanID}.pdf`
-                            );
-                            result.data.pipe(report);
-                            report.on("finish", () => {
-                                console.info(
-                                    `Report generated: /reports/${req.params.scanID}.pdf`
-                                );
-                                res.redirect(
-                                    `/reports/${req.params.scanID}.pdf`
-                                );
-                            });
-                            report.on("error", (err) => console.error(err));
-                        } else {
-                            console.error("Reports directory does not exist");
-                        }
-                    });
+                    result.data.pipe(
+                        fs.createWriteStream(
+                            "./public/reports/" + req.params.scanID + ".pdf"
+                        )
+                    );
+                    console.info(
+                        "Report generated: /reports/" +
+                            req.params.scanID +
+                            ".pdf"
+                    );
                 } catch (err) {
                     console.error(err);
                 }
@@ -164,7 +154,7 @@ async function plagarismCheck(article_url) {
                     (err) => logError("submitUrlAsync - businesses", err)
                     //logSuccess("submitUrlAsync - businesses", res);
                     //console.info(res);
-                );
+            )
         })
         .catch((err) => {
             console.error(err);
