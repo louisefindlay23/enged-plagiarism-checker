@@ -68,9 +68,17 @@ app.post("/retrieve-pr", function (req, res) {
 });
 
 function getPR(pr) {
+    console.info("PR function run");
+    const { Octokit } = require("@octokit/core");
+    const {
+        restEndpointMethods,
+    } = require("@octokit/plugin-rest-endpoint-methods");
+    const MyOctokit = Octokit.plugin(restEndpointMethods);
+
+    let octokit = new MyOctokit({ auth: process.env.GITHUB_PAT });
     octokit.rest.pulls
         .listFiles({
-            owner: "section-engineering-education",
+            owner: "louisefindlay23",
             repo: "engineering-education",
             pull_number: pr,
         })
@@ -99,7 +107,6 @@ const exportID = Date.now() + 3;
 
 app.post("/webhook/completed/:scanID", function (req, res) {
     console.info("Scan Complete Webhook Posted");
-    console.info(req.body);
     copyleaks
         .loginAsync(process.env.COPYLEAKS_EMAIL, process.env.COPYLEAKS_APIKEY)
         .then((loginResult) => {
@@ -125,6 +132,7 @@ app.post("/webhook/completed/:scanID", function (req, res) {
                             const report = fs.createWriteStream(
                                 `public/reports/${req.params.scanID}.pdf`
                             );
+                            console.info(report);
                             result.data.pipe(report);
                             report.on("finish", () => {
                                 console.info(
@@ -146,9 +154,6 @@ app.post("/webhook/completed/:scanID", function (req, res) {
             retrieveScan().then(function () {
                 console.info("Success");
                 // GitHub Post Comment
-                const pr = 6901;
-                console.info("Your PR number is " + pr);
-                // Obtaining article raw file URL from GitHub
                 const { Octokit } = require("@octokit/core");
                 const {
                     restEndpointMethods,
@@ -168,17 +173,21 @@ app.post("/webhook/completed/:scanID", function (req, res) {
                         console.error(err);
                     });
 
+                const postPR = 21;
+
                 const comment = `Plagiarism Report downloaded. View at: http://enged-plagiarism-checker.louisefindlay.com/reports/${req.params.scanID}.pdf`;
 
                 octokit.rest.issues
                     .createComment({
-                        owner: "section-engineering-education",
+                        owner: "louisefindlay23",
                         repo: "engineering-education",
-                        issue_number: pr,
+                        issue_number: postPR,
                         body: comment,
                     })
                     .then((result) => {
-                        console.info(`Posted comment: ${comment}`);
+                        console.info(
+                            `Posted comment: ${comment} on PR ${postPR}`
+                        );
                         console.info(result);
                         res.end();
                     })
