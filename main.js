@@ -129,13 +129,52 @@ app.post("/webhook/completed/:scanID", function (req, res) {
                     console.error(err);
                 }
             };
-            retrieveScan()
-                .then(function () {
-                    console.info("Success");
-                })
-                .catch((err) => {
-                    console.error(err);
-                });
+            retrieveScan().then(function () {
+                console.info("Success");
+                // GitHub Post Comment
+                const pr = 6901;
+                console.info("Your PR number is " + pr);
+                // Obtaining article raw file URL from GitHub
+                const { Octokit } = require("@octokit/core");
+                const {
+                    restEndpointMethods,
+                } = require("@octokit/plugin-rest-endpoint-methods");
+                const MyOctokit = Octokit.plugin(restEndpointMethods);
+
+                let octokit = new MyOctokit({ auth: process.env.GITHUB_PAT });
+
+                octokit.rest.users
+                    .getAuthenticated({})
+                    .then((result) => {
+                        console.info(
+                            "Success. You are now authenticated with the GitHub API."
+                        );
+                    })
+                    .catch((err) => {
+                        console.error(err);
+                    });
+
+                const comment = `Plagiarism Report downloaded. View at: http://enged-plagiarism-checker.louisefindlay.com/reports/${req.params.scanID}.pdf`;
+
+                octokit.rest.issues
+                    .createComment({
+                        owner: "section-engineering-education",
+                        repo: "engineering-education",
+                        issue_number: pr,
+                        body: comment,
+                    })
+                    .then((result) => {
+                        console.info(`Posted comment: ${comment}`);
+                        console.info(result);
+                        res.end();
+                    })
+                    .catch((err) => {
+                        console.error(err);
+                    });
+            });
+        })
+        .catch((err) => {
+            console.error(err);
         });
 });
 
