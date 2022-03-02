@@ -32,8 +32,6 @@ app.get("/", (req, res) => {
 });
 
 app.post("/retrieve-pr", function (req, res) {
-    const pr = req.body.pr;
-    console.info("Your PR number is " + pr);
     // Obtaining article raw file URL from GitHub
     const { Octokit } = require("@octokit/core");
     const {
@@ -54,6 +52,22 @@ app.post("/retrieve-pr", function (req, res) {
             console.error(err);
         });
 
+    let pr = null;
+
+    if (req.body.payload) {
+        let github_response = req.body.payload;
+        let newArray = [];
+        newArray.push(github_response);
+        github_response = JSON.parse(newArray);
+        pr = github_response.number;
+    } else {
+        pr = req.body.pr;
+    }
+    console.info(`Your PR Number is ${pr}`);
+    getPR(pr);
+});
+
+function getPR(pr) {
     octokit.rest.pulls
         .listFiles({
             owner: "section-engineering-education",
@@ -78,7 +92,7 @@ app.post("/retrieve-pr", function (req, res) {
         .catch((err) => {
             console.error(err);
         });
-});
+}
 
 const scanID = Date.now() + 2;
 const exportID = Date.now() + 3;
