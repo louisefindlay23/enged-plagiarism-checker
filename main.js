@@ -108,11 +108,12 @@ app.post("/webhook/completed/:scanID", function (req, res) {
         },
         3, 
         null, 
+            // PDF report
         {
             endpoint: `${WEBHOOK_URL}/export/${scanID}/pdf-report`,
             verb: "POST",
             headers: [
-            ["content-type", "application/json"],
+            ["content-type", "application/pdf"],
             ],
         },
     );
@@ -127,6 +128,8 @@ app.post("/webhook/completed/:scanID", function (req, res) {
         });
 });
 
+// Export Webhook Endpoints
+
 app.post("/webhook/export/:scanID/completion", function (req, res) {
     console.info("Hit export complete webhook");
     console.info(req.body);
@@ -137,6 +140,8 @@ app.post("/webhook/export/:exportID/completion", function (req, res) {
     console.info(req.body);
 });
 
+// Report Webhook Endpoints
+
 app.post("/webhook/export/:scanID/results/:requestID", function (req, res) {
     console.info("Hit Results complete webhook");
     //console.info(req.body);
@@ -145,14 +150,12 @@ app.post("/webhook/export/:scanID/results/:requestID", function (req, res) {
 app.post("/webhook/export/:scanID/pdf-report", function (req, res) {
     console.info("Hit PDF Report complete webhook");
     console.info(req.body);
-    console.info(res);
 });
 
 app.post("/webhook/export/:exportID/crawled-version", function (req, res) {
     console.info("Hit Crawled Version complete webhook");
     //console.info(req.body);
 });
-
 
 async function plagarismCheck(article_url) {
     // Obtain Access Token
