@@ -1,6 +1,5 @@
 require("dotenv").config();
 
-const axios = require("axios");
 const fs = require("fs");
 
 const {
@@ -62,22 +61,12 @@ app.post("/retrieve-pr", function (req, res) {
         })
         .then((result) => {
             result.data.forEach((file) => {
-                if (
-                    file.filename.includes("index.md") &&
-                    !file.filename.includes("author")
-                ) {
+                if (file.filename.includes("index.md") && !file.filename.includes("author")) {
                     const article_url = file.raw_url;
-                    plagarismCheck(article_url)
-                        .then((result) => console.log(result))
-                        .catch((err) => {
-                            console.error(err);
-                        });
+                    plagarismCheck(article_url).then((result) => console.log(result));
                 }
-            });
         })
-        .catch((err) => {
-            console.error(err);
-        });
+    })
 });
 
 const scanID = Date.now() + 2;
@@ -90,44 +79,75 @@ app.post("/webhook/completed/:scanID", function (req, res) {
         .loginAsync(process.env.COPYLEAKS_EMAIL, process.env.COPYLEAKS_APIKEY)
         .then((loginResult) => {
             logSuccess("loginAsync", loginResult);
-            // Run download method
-            const retrieveScan = async () => {
-                try {
-                    const result = await axios.get(
-                        "https://api.copyleaks.com/v3/downloads/" +
-                            req.params.scanID +
-                            "/report.pdf",
-                        {
-                            headers: {
-                                Authorization:
-                                    "Bearer " + loginResult.access_token,
-                            },
-                            responseType: "stream",
-                        }
-                    );
-                    result.data.pipe(
-                        fs.createWriteStream(
-                            "./public/reports/" + req.params.scanID + ".pdf"
-                        )
-                    );
-                    console.info(
-                        "Report generated: /reports/" +
-                            req.params.scanID +
-                            ".pdf"
-                    );
-                } catch (err) {
-                    console.error(err);
-                }
-            };
-            retrieveScan()
-                .then(function () {
-                    console.info("Success");
-                })
-                .catch((err) => {
-                    console.error(err);
-                });
+            // Run export method
+            const requestID = req.body.results.internet[0].id;
+            const model = new CopyleaksExportModel(
+            `${WEBHOOK_URL}/export/${exportID}/completion`,
+        [
+            // results
+            {
+                id: requestID,
+                endpoint: `${WEBHOOK_URL}/export/${exportID}/results/${requestID}`,
+                verb: "POST",
+                headers: [
+                    ["content-type", "application/json"],
+                 ],
+            },
+        ],
+        {
+            // crawled version
+            endpoint: `${WEBHOOK_URL}/export/${exportID}/crawled-version`,
+            verb: "POST",
+              headers: [
+                ["content-type", "application/json"],
+              ],
+        },
+        3, 
+        null, 
+            // PDF report
+        {
+            endpoint: `${WEBHOOK_URL}/export/${exportID}/pdf-report`,
+            verb: "POST",
+            headers: [
+            ["content-type", "application/pdf"],
+            ],
+        },
+    );
+
+    copyleaks.exportAsync(loginResult, scanID, exportID, model).then(
+        (res) => logSuccess("exportAsync", res),
+        (err) => {
+            logError("exportAsync", err);
+        }
+    ),
+        (err) => logError("submitUrlAsync - businesses", err);
         });
 });
+
+// Export Webhook Endpoints
+app.post("/webhook/export/:exportID/completion", function (req, res) {
+    console.info("Hit export complete webhook");
+    console.info(req.body);
+});
+
+// Report Webhook Endpoints
+
+app.post("/webhook/export/:exportID/results/:requestID", function (req, res) {
+    console.info("Hit Results complete webhook");
+    //console.info(req.body);
+});
+
+app.post("/webhook/export/:exportID/pdf-report", function (req, res) {
+    console.info("Hit PDF Report complete webhook");
+    console.info(req.body);
+});
+
+app.post("/webhook/export/:exportID/crawled-version", function (req, res) {
+    console.info("Hit Crawled Version complete webhook");
+    //console.info(req.body);
+});
+
+// Report Webhook Endpoints
 
 async function plagarismCheck(article_url) {
     // Obtain Access Token
@@ -149,16 +169,13 @@ async function plagarismCheck(article_url) {
             });
             copyleaks
                 .submitUrlAsync("businesses", loginResult, scanID, submission)
-                .then(
-                    (res) => logSuccess("submitUrlAsync - businesses", res),
+                .then((res) =>
+                        logSuccess("submitUrlAsync - businesses", res),
                     (err) => logError("submitUrlAsync - businesses", err)
-                    //logSuccess("submitUrlAsync - businesses", res);
-                    //console.info(res);
-            )
-        })
-        .catch((err) => {
-            console.error(err);
-        });
+            //logSuccess("submitUrlAsync - businesses", res);
+            //console.info(res);
+);
+});
 }
 
 function logError(title, err) {
