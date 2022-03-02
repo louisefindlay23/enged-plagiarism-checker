@@ -1,15 +1,11 @@
 require("dotenv").config();
 
 const fs = require("fs");
-const axios = require("axios");
 
 const {
     Copyleaks,
     CopyleaksConfig,
     CopyleaksURLSubmissionModel,
-    CopyleaksFileSubmissionModel,
-    CopyleaksFileOcrSubmissionModel,
-    CopyleaksDeleteRequestModel,
     CopyleaksExportModel,
 } = require("plagiarism-checker");
 const copyleaks = new Copyleaks();
@@ -86,12 +82,12 @@ app.post("/webhook/completed/:scanID", function (req, res) {
             // Run export method
             const requestID = req.body.results.internet[0].id;
             const model = new CopyleaksExportModel(
-            `${WEBHOOK_URL}/export/${scanID}/completion`,
+            `${WEBHOOK_URL}/export/${exportID}/completion`,
         [
             // results
             {
                 id: requestID,
-                endpoint: `${WEBHOOK_URL}/export/${scanID}/results/${requestID}`,
+                endpoint: `${WEBHOOK_URL}/export/${exportID}/results/${requestID}`,
                 verb: "POST",
                 headers: [
                     ["content-type", "application/json"],
@@ -100,7 +96,7 @@ app.post("/webhook/completed/:scanID", function (req, res) {
         ],
         {
             // crawled version
-            endpoint: `${WEBHOOK_URL}/export/${scanID}/crawled-version`,
+            endpoint: `${WEBHOOK_URL}/export/${exportID}/crawled-version`,
             verb: "POST",
               headers: [
                 ["content-type", "application/json"],
@@ -110,7 +106,7 @@ app.post("/webhook/completed/:scanID", function (req, res) {
         null, 
             // PDF report
         {
-            endpoint: `${WEBHOOK_URL}/export/${scanID}/pdf-report`,
+            endpoint: `${WEBHOOK_URL}/export/${exportID}/pdf-report`,
             verb: "POST",
             headers: [
             ["content-type", "application/pdf"],
@@ -129,25 +125,19 @@ app.post("/webhook/completed/:scanID", function (req, res) {
 });
 
 // Export Webhook Endpoints
-
-app.post("/webhook/export/:scanID/completion", function (req, res) {
-    console.info("Hit export complete webhook");
-    console.info(req.body);
-});
-
 app.post("/webhook/export/:exportID/completion", function (req, res) {
-    console.info("Hit export proper complete webhook");
+    console.info("Hit export complete webhook");
     console.info(req.body);
 });
 
 // Report Webhook Endpoints
 
-app.post("/webhook/export/:scanID/results/:requestID", function (req, res) {
+app.post("/webhook/export/:exportID/results/:requestID", function (req, res) {
     console.info("Hit Results complete webhook");
     //console.info(req.body);
 });
 
-app.post("/webhook/export/:scanID/pdf-report", function (req, res) {
+app.post("/webhook/export/:exportID/pdf-report", function (req, res) {
     console.info("Hit PDF Report complete webhook");
     console.info(req.body);
 });
@@ -156,6 +146,8 @@ app.post("/webhook/export/:exportID/crawled-version", function (req, res) {
     console.info("Hit Crawled Version complete webhook");
     //console.info(req.body);
 });
+
+// Report Webhook Endpoints
 
 async function plagarismCheck(article_url) {
     // Obtain Access Token
