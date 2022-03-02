@@ -5,9 +5,7 @@ const fs = require("fs");
 
 const {
     Copyleaks,
-    CopyleaksConfig,
     CopyleaksURLSubmissionModel,
-    CopyleaksExportModel,
 } = require("plagiarism-checker");
 const copyleaks = new Copyleaks();
 const WEBHOOK_URL = "http://enged-plagiarism-checker.louisefindlay.com/webhook";
@@ -15,12 +13,11 @@ const WEBHOOK_URL = "http://enged-plagiarism-checker.louisefindlay.com/webhook";
 // Express
 const express = require("express");
 const app = express();
-const ejs = require("ejs");
 const bodyParser = require("body-parser");
-const port = "4005";
+const port = process.env.PORT;
 
 // Initialising Express
-app.use(express.json({ limit: "25mb" }));
+app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(express.static("public"));
@@ -32,7 +29,7 @@ app.get("/", (req, res) => {
 });
 
 app.post("/retrieve-pr", function (req, res) {
-    // Obtaining article raw file URL from GitHub
+    // Triggered by form post or GitHub Repo Webhook
     const { Octokit } = require("@octokit/core");
     const {
         restEndpointMethods,
@@ -53,13 +50,14 @@ app.post("/retrieve-pr", function (req, res) {
         });
 
     let pr = null;
-
+    // Get PR Number from Webhook or Form Body
     if (req.body.payload) {
         let github_response = req.body.payload;
         let newArray = [];
         newArray.push(github_response);
         github_response = JSON.parse(newArray);
         pr = github_response.number;
+        // TODO: Only continue is plagarism check needed label is present
     } else {
         pr = req.body.pr;
     }
@@ -67,6 +65,7 @@ app.post("/retrieve-pr", function (req, res) {
     getPR(pr);
 });
 
+// Obtaining article raw file URL from GitHub
 function getPR(pr) {
     console.info("PR function run");
     const { Octokit } = require("@octokit/core");
@@ -78,6 +77,7 @@ function getPR(pr) {
     let octokit = new MyOctokit({ auth: process.env.GITHUB_PAT });
     octokit.rest.pulls
         .listFiles({
+            // TODO: Switch back to EngEd Repo
             owner: "louisefindlay23",
             repo: "engineering-education",
             pull_number: pr,
@@ -103,7 +103,6 @@ function getPR(pr) {
 }
 
 const scanID = Date.now() + 2;
-const exportID = Date.now() + 3;
 
 app.post("/webhook/completed/:scanID", function (req, res) {
     console.info("Scan Complete Webhook Posted");
@@ -126,21 +125,21 @@ app.post("/webhook/completed/:scanID", function (req, res) {
                             responseType: "stream",
                         }
                     );
+                    // Access Reports Directory
                     fs.access(`public/reports/`, (error) => {
                         if (!error) {
                             console.info("Reports directory exists");
+                            // Write and pipe PDF to file
                             const report = fs.createWriteStream(
                                 `public/reports/${req.params.scanID}.pdf`
                             );
-                            console.info(report);
                             result.data.pipe(report);
                             report.on("finish", () => {
                                 console.info(
                                     `Report generated: /reports/${req.params.scanID}.pdf`
                                 );
-                                res.redirect(
-                                    `/reports/${req.params.scanID}.pdf`
-                                );
+                                // Download Finished
+                                // TODO: Fix repetition (i.e. multiple comments posted) by ending post request
                             });
                             report.on("error", (err) => console.error(err));
                         } else {
@@ -173,10 +172,10 @@ app.post("/webhook/completed/:scanID", function (req, res) {
                         console.error(err);
                     });
 
+                // TODO: Retrive PR number from earlier to post comment to same PR
                 const postPR = 21;
-
                 const comment = `Plagiarism Report downloaded. View at: http://enged-plagiarism-checker.louisefindlay.com/reports/${req.params.scanID}.pdf`;
-
+                // TODO: Change back to EngEd repo
                 octokit.rest.issues
                     .createComment({
                         owner: "louisefindlay23",
@@ -203,12 +202,11 @@ app.post("/webhook/completed/:scanID", function (req, res) {
 
 async function plagarismCheck(article_url) {
     // Obtain Access Token
-    console.info("Get Access Token");
+    console.info("Logging into CopyLeaks API");
     copyleaks
         .loginAsync(process.env.COPYLEAKS_EMAIL, process.env.COPYLEAKS_APIKEY)
         .then((loginResult) => {
             logSuccess("loginAsync", loginResult);
-            // TODO: Use res.".expires" to get expiration time and refresh access token
             // Submit URL to Copyleaks
             var submission = new CopyleaksURLSubmissionModel(article_url, {
                 sandbox: true,
@@ -219,6 +217,7 @@ async function plagarismCheck(article_url) {
                     create: true,
                 },
             });
+            // Running plagiarism check
             copyleaks
                 .submitUrlAsync("businesses", loginResult, scanID, submission)
                 .then(
